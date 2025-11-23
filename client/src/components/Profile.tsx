@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAccount, useBalance } from 'wagmi'
 import { formatEther } from 'viem'
 import CreateItem from './CreateItem'
-import { useActiveListings, useIsOwner } from '../hooks/useContracts'
+import { useActiveListings, useIsOwner, useCancelListing } from '../hooks/useContracts'
 import { fetchMetadataByTokenId, getPurchases, getSales } from '../services/metadataStorage'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 interface PurchasedItem {
   listingId: number
@@ -76,6 +77,62 @@ export default function Profile() {
   // Track sold items (items sold by user)
   const [soldItems, setSoldItems] = useState<SoldItem[]>([])
   const [isLoadingSoldItems, setIsLoadingSoldItems] = useState(false)
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedRarity, setSelectedRarity] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'timestamp-desc' | 'price-asc' | 'price-desc' | 'name' | 'name-desc'>('timestamp-desc')
+
+  const { cancel, isPending: isCancelling, isSuccess: isCancelSuccess } = useCancelListing()
+
+  // Filter logic
+  const filterItems = <T extends { name: string, description: string, category: string, rarity: string, listingId: number, price?: string, purchasePrice?: string, salePrice?: string }>(items: T[]) => {
+    return items
+      .filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
+        const matchesRarity = selectedRarity === 'all' || item.rarity === selectedRarity
+        return matchesSearch && matchesCategory && matchesRarity
+      })
+      .sort((a, b) => {
+        if (sortBy === 'timestamp-desc') return b.listingId - a.listingId
+        if (sortBy === 'price-asc') return parseFloat(a.price || a.purchasePrice || a.salePrice || '0') - parseFloat(b.price || b.purchasePrice || b.salePrice || '0')
+        if (sortBy === 'price-desc') return parseFloat(b.price || b.purchasePrice || b.salePrice || '0') - parseFloat(a.price || a.purchasePrice || a.salePrice || '0')
+        if (sortBy === 'name') return a.name.localeCompare(b.name)
+        if (sortBy === 'name-desc') return b.name.localeCompare(a.name)
+        return b.listingId - a.listingId
+      })
+  }
+
+  const filteredPurchasedItems = useMemo(() => filterItems(purchasedItems), [purchasedItems, searchTerm, selectedCategory, selectedRarity, sortBy])
+  const filteredCreatedItems = useMemo(() => filterItems(createdItems), [createdItems, searchTerm, selectedCategory, selectedRarity, sortBy])
+  const filteredSoldItems = useMemo(() => filterItems(soldItems), [soldItems, searchTerm, selectedCategory, selectedRarity, sortBy])
+
+  const categories = useMemo(() => {
+    const allItems = [...purchasedItems, ...createdItems, ...soldItems]
+    const cats = new Set(allItems.map(item => item.category))
+    return ['all', ...Array.from(cats)]
+  }, [purchasedItems, createdItems, soldItems])
+
+  const rarities = ['all', 'common', 'rare', 'epic', 'legendary']
+
+  const handleCancel = async (listingId: number) => {
+    if (confirm('Are you sure you want to cancel this listing?')) {
+      try {
+        cancel(BigInt(listingId))
+      } catch (error) {
+        console.error('Error cancelling listing:', error)
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (isCancelSuccess) {
+      refetchListings()
+    }
+  }, [isCancelSuccess])
 
   // Fetch purchased items from DB
   const fetchPurchasedItems = async () => {
@@ -303,13 +360,16 @@ export default function Profile() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center py-8">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-10 text-center max-w-md">
+      <div className="min-h-screen bg-[#E7F5DC] flex items-center justify-center py-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-10 text-center max-w-6xl">
           <div className="text-6xl mb-6">🔐</div>
           <h2 className="text-3xl font-extrabold text-black mb-4">
             Connect Your Wallet
           </h2>
           <p className="text-gray-600 text-lg mb-6">Connect your wallet to view your profile and manage your items.</p>
+          <div className='flex items-center justify-center mt-6'>
+            <ConnectButton />
+          </div>
         </div>
       </div>
     )
@@ -321,28 +381,33 @@ export default function Profile() {
   const activeListings = createdItems.filter(item => item.active).length
 
   return (
-    <div className="min-h-screen bg-white py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen bg-cover bg-center py-12 z-10"
+      style={{ backgroundImage: "url('/image1.gif')" }}
+    >
+      {/* Lớp phủ đen mờ */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-10">
-            <h1 className="text-5xl font-extrabold text-black mb-2">
+          <div className="mb-4 text-center bg-white rounded-2xl p-6">
+            <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600 mb-4 inline-block">
               Profile
             </h1>
-            <p className="text-gray-600 text-lg">Manage your items and view your statistics</p>
+            <p className="text-black text-lg max-w-2xl mx-auto">Manage your items and view your statistics</p>
           </div>
 
           {/* Wallet Information */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <span>💼</span> Wallet Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="p-4 bg-gray-50 rounded-xl border-4 border-gray-200">
                 <p className="text-sm font-semibold text-gray-600 mb-2">Address</p>
                 <p className="text-base font-mono text-gray-900 break-all bg-white/60 px-3 py-2 rounded-lg">{address}</p>
               </div>
-              <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+              <div className="p-4 bg-green-50 rounded-xl border-4 border-green-200">
                 <p className="text-sm font-semibold text-gray-600 mb-2">Balance</p>
                 <p className="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : 'Loading...'}
@@ -359,355 +424,421 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 mb-8 overflow-hidden">
-            <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-              <nav className="flex -mb-px overflow-x-auto">
-                {!isOwner && (
-                  <button
-                    onClick={() => setActiveTab('purchased')}
-                    className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'purchased'
-                      ? 'border-green-600 text-green-600 bg-green-50'
-                      : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
-                      }`}
-                  >
-                    🛍️ Purchased Items ({purchasedItems.length})
-                  </button>
-                )}
-                {isOwner && (
-                  <>
+          {/* Main Content Container */}
+          <div className="bg-white rounded-3xl p-8 shadow-2xl">
+            {/* Tabs */}
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E7F5DC] mb-8 overflow-hidden">
+              <div className="border-b-2 border-[#E7F5DC] bg-gradient-to-r from-gray-50 to-white">
+                <nav className="flex -mb-px overflow-x-auto">
+                  {!isOwner && (
                     <button
-                      onClick={() => setActiveTab('seller')}
-                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'seller'
-                        ? 'border-green-600 text-green-600 bg-green-50'
-                        : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                      onClick={() => setActiveTab('purchased')}
+                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'purchased'
+                        ? 'border-[#E7F5DC] text-black bg-[#E7F5DC]'
+                        : 'border-r-2 border-[#E7F5DC] border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
                         }`}
                     >
-                      📊 Dashboard
+                      🛍️ Purchased Items ({purchasedItems.length})
                     </button>
-                    <button
-                      onClick={() => setActiveTab('sold')}
-                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'sold'
-                        ? 'border-green-600 text-green-600 bg-green-50'
-                        : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
-                        }`}
-                    >
-                      💰 Sold Items ({soldItems.length})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('create')}
-                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'create'
-                        ? 'border-green-600 text-green-600 bg-green-50'
-                        : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
-                        }`}
-                    >
-                      ➕ Create Item
-                    </button>
-                  </>
-                )}
-              </nav>
-            </div>
-
-            {/* Purchased Items Tab */}
-            {activeTab === 'purchased' && (
-              <div className="p-6">
-                {isLoadingPurchases ? (
-                  <div className="text-center py-20">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
-                    <p className="text-gray-600 text-lg font-medium">Loading purchased items...</p>
-                  </div>
-                ) : purchasedItems.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {purchasedItems.map(item => (
-                      <div
-                        key={`${item.listingId}-${item.tokenId}`}
-                        className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                  )}
+                  {isOwner && (
+                    <>
+                      <button
+                        onClick={() => setActiveTab('seller')}
+                        className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'seller'
+                          ? 'border-green-600 text-white bg-green-600'
+                          : 'border-r-2 border-[#E7F5DC] border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                          }`}
                       >
-                        <div className="relative bg-gray-50 p-6">
-                          <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
-                            {item.image.startsWith('http') ? (
-                              <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
-                            ) : (
-                              <span className="drop-shadow-lg">{item.image}</span>
-                            )}
-                          </div>
-                          <div className="absolute top-4 right-4">
-                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${rarityColors[item.rarity]}`}>
-                              {item.rarity.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
-                            {item.name}
-                          </h3>
-                          <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem] mb-4">{item.description}</p>
-                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-                            <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                              <span className="text-green-500">📦</span>
-                              {item.category}
-                            </span>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="p-2 bg-gray-50 rounded-lg">
-                              <p className="text-xs text-gray-500 mb-1">Purchased</p>
-                              <p className="text-xs font-medium text-gray-700">{item.purchaseDate}</p>
-                            </div>
-                            <div className="flex items-baseline gap-2 pl-2">
-                              <p className="text-2xl font-extrabold text-green-600">
-                                {item.purchasePrice}
-                              </p>
-                              <span className="text-sm font-semibold text-gray-600">ETH</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
-                    <div className="text-6xl mb-4">🛒</div>
-                    <p className="text-gray-600 text-xl font-semibold mb-2">No purchased items</p>
-                    <p className="text-gray-500">Items you buy will appear here.</p>
-                  </div>
-                )}
+                        📊 Dashboard
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('sold')}
+                        className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'sold'
+                          ? 'border-green-600 text-white bg-green-600'
+                          : 'border-r-2 border-[#E7F5DC] border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                          }`}
+                      >
+                        💰 Sold Items ({soldItems.length})
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('create')}
+                        className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'create'
+                          ? 'border-green-600 text-white bg-green-600'
+                          : 'border-r-2 border-[#E7F5DC] border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                          }`}
+                      >
+                        ➕ Create Item
+                      </button>
+                    </>
+                  )}
+                </nav>
               </div>
-            )}
 
-            {/* Seller Dashboard Tab - Only for owner */}
-            {activeTab === 'seller' && isOwner && (
-              <div className="p-6">
-                {/* Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-gray-700 font-semibold">Active Listings</p>
-                      <span className="text-2xl">📋</span>
+
+              {/* Filters */}
+              {activeTab !== 'create' && (
+                <div className="p-6 border-b-2 border-[#E7F5DC] bg-gray-50/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Search */}
+                    <div className="lg:col-span-1">
+                      <input
+                        type="text"
+                        placeholder="Search items..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      />
                     </div>
-                    <p className="text-4xl font-extrabold text-black">{activeListings}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border border-green-200 shadow-lg hover:shadow-xl transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-green-700 font-semibold">Total Sales</p>
-                      <span className="text-2xl">💰</span>
+
+                    {/* Category Filter */}
+                    <div>
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      >
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <p className="text-4xl font-extrabold text-green-900">{totalSales}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-gray-700 font-semibold">Total Revenue</p>
-                      <span className="text-2xl">💎</span>
+
+                    {/* Rarity Filter */}
+                    <div>
+                      <select
+                        value={selectedRarity}
+                        onChange={(e) => setSelectedRarity(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      >
+                        {rarities.map(rarity => (
+                          <option key={rarity} value={rarity}>
+                            {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <p className="text-4xl font-extrabold text-green-600">
-                      {totalRevenue.toFixed(4)} ETH
-                    </p>
+
+                    {/* Sort */}
+                    <div>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      >
+                        <option value="timestamp-desc">Default</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="name">Name: A to Z</option>
+                        <option value="name-desc">Name: Z to A</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-
-                {/* Created Items */}
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900">Your Created Items</h3>
-                    <button
-                      onClick={() => setActiveTab('create')}
-                      className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
-                    >
-                      ➕ Create New Item
-                    </button>
-                  </div>
-                  {listingsLoading ? (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500">Loading your items...</p>
+              )}
+              {activeTab === 'purchased' && (
+                <div className="p-6">
+                  {isLoadingPurchases ? (
+                    <div className="text-center py-20">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
+                      <p className="text-gray-600 text-lg font-medium">Loading purchased items...</p>
                     </div>
-                  ) : createdItems.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {createdItems.map(item => (
+                  ) : filteredPurchasedItems.length > 0 ? (
+                    <div className="space-y-4">
+                      {filteredPurchasedItems.map(item => (
                         <div
-                          key={item.listingId}
-                          className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                          key={`${item.listingId}-${item.tokenId}`}
+                          className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col sm:flex-row"
                         >
-                          <div className="relative bg-gray-50 p-6">
-                            <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                          {/* Image Section */}
+                          <div className="relative w-full sm:w-48 h-48 sm:h-auto bg-gray-50 flex-shrink-0 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
+                            <div className="text-5xl transform group-hover:scale-110 transition-transform duration-300">
                               {item.image.startsWith('http') ? (
-                                <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
+                                <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-md" />
                               ) : (
-                                <span className="drop-shadow-lg">{item.image}</span>
+                                <span className="drop-shadow-md">{item.image}</span>
                               )}
                             </div>
-                            <div className="absolute top-4 right-4">
-                              <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${rarityColors[item.rarity]}`}>
+                            <div className="absolute top-2 right-2">
+                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold shadow-sm ${rarityColors[item.rarity as keyof typeof rarityColors]}`}>
                                 {item.rarity.toUpperCase()}
                               </span>
                             </div>
                           </div>
-                          <div className="p-6">
-                            <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
-                              {item.name}
-                            </h4>
-                            <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem] mb-4">{item.description}</p>
-                            <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-                              <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                                <span className="text-green-500">📦</span>
-                                {item.category}
-                              </span>
+
+                          {/* Content Section */}
+                          <div className="p-6 flex-grow flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                                  {item.name}
+                                </h3>
+                                <span className="text-sm font-medium text-gray-500 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg">
+                                  <span className="text-green-500">📦</span>
+                                  {item.category}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description}</p>
                             </div>
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">Price:</span>
-                                <span className="text-lg font-extrabold text-green-600">
-                                  {item.price} ETH
-                                </span>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Purchased Date</p>
+                                <p className="text-sm font-medium text-gray-900">{item.purchaseDate}</p>
                               </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">Status:</span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                                  {item.active ? '✓ Active' : 'Sold'}
-                                </span>
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Price</p>
+                                <p className="text-sm font-bold text-green-600">{item.purchasePrice} ETH</p>
                               </div>
-                              {item.sales > 0 && (
-                                <>
-                                  <div className="flex justify-between items-center pt-2 border-t">
-                                    <span className="text-sm text-gray-600">Sales:</span>
-                                    <span className="text-sm font-bold text-gray-900">{item.sales}</span>
-                                  </div>
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Revenue:</span>
-                                    <span className="text-sm font-bold text-green-600">{item.totalRevenue} ETH</span>
-                                  </div>
-                                </>
-                              )}
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
-                      <div className="text-6xl mb-4">🎨</div>
-                      <p className="text-gray-600 text-xl font-semibold mb-2">No items created yet</p>
-                      <p className="text-gray-500 mb-6">Start creating your first item!</p>
-                      <button
-                        onClick={() => setActiveTab('create')}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                      >
-                        ➕ Create Your First Item
-                      </button>
+                    <div className="text-center py-20 bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-700">
+                      <div className="text-6xl mb-4">🛒</div>
+                      <p className="text-gray-800 text-xl font-semibold mb-2">No purchased items</p>
+                      <p className="text-gray-600">Items you buy will appear here.</p>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Sold Items Tab - Only for owner */}
-            {activeTab === 'sold' && isOwner && (
-              <div className="p-6">
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Sold Items</h3>
-                  <p className="text-sm text-gray-600">
-                    Total Revenue: <span className="font-semibold text-green-600">{totalRevenue.toFixed(4)} ETH</span>
-                  </p>
-                </div>
-                {isLoadingSoldItems ? (
-                  <div className="text-center py-20">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
-                    <p className="text-gray-600 text-lg font-medium">Loading sold items...</p>
-                  </div>
-                ) : soldItems.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {soldItems.map((item, index) => (
-                      <div
-                        key={`${item.listingId}-${item.tokenId}-${index}`}
-                        className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
-                      >
-                        <div className="relative bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-6">
-                          <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
-                            {item.image.startsWith('http') ? (
-                              <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
-                            ) : (
-                              <span className="drop-shadow-lg">{item.image}</span>
-                            )}
-                          </div>
-                          <div className="absolute top-4 right-4">
-                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${rarityColors[item.rarity]}`}>
-                              {item.rarity.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
-                            {item.name}
-                          </h3>
-                          <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem] mb-4">{item.description}</p>
-                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-                            <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                              <span className="text-green-500">📦</span>
-                              {item.category}
-                            </span>
-                          </div>
-                          <div className="space-y-3">
-                            <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                              <p className="text-xs text-gray-500 mb-1 font-medium">Sale Price</p>
-                              <p className="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                                {item.salePrice} ETH
-                              </p>
-                            </div>
-                            <div className="p-2 bg-gray-50 rounded-lg">
-                              <p className="text-xs text-gray-500 mb-1">Sold Date</p>
-                              <p className="text-xs font-medium text-gray-700">{item.saleDate}</p>
-                            </div>
-                            <div className="p-2 bg-gray-50 rounded-lg">
-                              <p className="text-xs text-gray-500 mb-1">Buyer</p>
-                              <p className="text-xs font-mono text-gray-700 break-all">{item.buyerAddress}</p>
-                            </div>
-                            <div className="pt-2">
-                              <p className="text-xs text-gray-500 mb-1">Transaction</p>
-                              <a
-                                href={`https://localhost:8545/tx/${item.transactionHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-green-600 hover:text-green-800 break-all underline"
-                              >
-                                {item.transactionHash.slice(0, 10)}...{item.transactionHash.slice(-8)}
-                              </a>
-                            </div>
-                          </div>
-                        </div>
+              {/* Seller Dashboard Tab - Only for owner */}
+              {activeTab === 'seller' && isOwner && (
+                <div className="p-6">
+                  {/* Statistics */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white rounded-2xl p-6 border-2 border-[#E7F5DC] shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm text-gray-700 font-semibold">Active Listings</p>
+                        <span className="text-2xl">📋</span>
                       </div>
-                    ))}
+                      <p className="text-4xl font-extrabold text-black">{activeListings}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-6 border-2 border-[#E7F5DC] shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm text-green-700 font-semibold">Total Sales</p>
+                        <span className="text-2xl">💰</span>
+                      </div>
+                      <p className="text-4xl font-extrabold text-green-900">{totalSales}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-6 border-2 border-[#E7F5DC] shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm text-gray-700 font-semibold">Total Revenue</p>
+                        <span className="text-2xl">💎</span>
+                      </div>
+                      <p className="text-4xl font-extrabold text-green-600">
+                        {totalRevenue.toFixed(4)} ETH
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
-                    <div className="text-6xl mb-4">💸</div>
-                    <p className="text-gray-600 text-xl font-semibold mb-2">No sold items yet</p>
-                    <p className="text-gray-500">Items you sell will appear here.</p>
+
+                  {/* Created Items */}
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-2xl font-bold text-gray-900">Your Created Items</h3>
+                      <button
+                        onClick={() => setActiveTab('create')}
+                        className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                      >
+                        ➕ Create New Item
+                      </button>
+                    </div>
+                    {listingsLoading ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">Loading your items...</p>
+                      </div>
+                    ) : filteredCreatedItems.length > 0 ? (
+                      <div className="space-y-4">
+                        {filteredCreatedItems.map(item => (
+                          <div
+                            key={item.listingId}
+                            className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-[#E7F5DC] overflow-hidden flex flex-col sm:flex-row"
+                          >
+                            {/* Image Section */}
+                            <div className="relative w-full sm:w-48 h-48 sm:h-auto bg-gray-50 flex-shrink-0 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-[#E7F5DC]">
+                              <div className="text-5xl transform group-hover:scale-110 transition-transform duration-300">
+                                {item.image.startsWith('http') ? (
+                                  <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-md" />
+                                ) : (
+                                  <span className="drop-shadow-md">{item.image}</span>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2">
+                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold shadow-sm ${rarityColors[item.rarity as keyof typeof rarityColors]}`}>
+                                  {item.rarity.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Content Section */}
+                            <div className="p-6 flex-grow flex flex-col justify-between">
+                              <div>
+                                <div className="flex justify-between items-start mb-2">
+                                  <h4 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                                    {item.name}
+                                  </h4>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                                    {item.active ? '✓ Active' : 'Sold'}
+                                  </span>
+                                </div>
+                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description}</p>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-100 items-end">
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Price</p>
+                                  <p className="text-lg font-bold text-green-600">{item.price} ETH</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Total Sales</p>
+                                  <p className="text-sm font-medium text-gray-900">{item.sales}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Revenue</p>
+                                  <p className="text-sm font-medium text-green-600">{item.totalRevenue} ETH</p>
+                                </div>
+                                <div className="flex justify-end">
+                                  {item.active && (
+                                    <button
+                                      onClick={() => handleCancel(item.listingId)}
+                                      disabled={isCancelling}
+                                      className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-semibold border border-red-200"
+                                    >
+                                      {isCancelling ? 'Cancelling...' : 'Cancel Listing'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-20 bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-700">
+                        <div className="text-6xl mb-4">🎨</div>
+                        <p className="text-gray-800 text-xl font-semibold mb-2">No created items</p>
+                        <p className="text-gray-600 mb-6">Create your first unique item to list on the marketplace.</p>
+                        <button
+                          onClick={() => setActiveTab('create')}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          Create Item
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* Create Item Tab - Only for owner */}
-            {activeTab === 'create' && isOwner && (
-              <div className="p-6">
-                <CreateItem
-                  onSuccess={() => {
-                    setActiveTab('seller')
-                    refetchListings()
-                  }}
-                />
-              </div>
-            )}
+              {/* Sold Items Tab - Only for owner */}
+              {activeTab === 'sold' && isOwner && (
+                <div className="p-6">
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Sold Items</h3>
+                    <p className="text-sm text-gray-600">
+                      Total Revenue: <span className="font-semibold text-green-600">{totalRevenue.toFixed(4)} ETH</span>
+                    </p>
+                  </div>
+                  {isLoadingSoldItems ? (
+                    <div className="text-center py-20">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
+                      <p className="text-gray-600 text-lg font-medium">Loading sold items...</p>
+                    </div>
+                  ) : filteredSoldItems.length > 0 ? (
+                    <div className="space-y-4">
+                      {filteredSoldItems.map((item, index) => (
+                        <div
+                          key={`${item.listingId}-${item.tokenId}-${index}`}
+                          className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col sm:flex-row"
+                        >
+                          {/* Image Section */}
+                          <div className="relative w-full sm:w-48 h-48 sm:h-auto bg-gray-50 flex-shrink-0 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
+                            <div className="text-5xl transform group-hover:scale-110 transition-transform duration-300">
+                              {item.image.startsWith('http') ? (
+                                <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-md" />
+                              ) : (
+                                <span className="drop-shadow-md">{item.image}</span>
+                              )}
+                            </div>
+                            <div className="absolute top-2 right-2">
+                              <span className={`px-2 py-1 rounded-full text-[10px] font-bold shadow-sm ${rarityColors[item.rarity as keyof typeof rarityColors]}`}>
+                                {item.rarity.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
 
-            {!isOwner && activeTab !== 'purchased' && (
-              <div className="p-6 text-center">
-                <p className="text-gray-500">Only contract owner can access seller dashboard and create items.</p>
-              </div>
-            )}
+                          {/* Content Section */}
+                          <div className="p-6 flex-grow flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                                  {item.name}
+                                </h3>
+                                <span className="text-sm font-medium text-gray-500 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg">
+                                  <span className="text-green-500">📦</span>
+                                  {item.category}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description}</p>
+                            </div>
 
-            {isOwner && activeTab === 'purchased' && (
-              <div className="p-6 text-center">
-                <p className="text-gray-500">Owner accounts can only access seller dashboard, sold items, and create items.</p>
-              </div>
-            )}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Sold Date</p>
+                                <p className="text-sm font-medium text-gray-900">{item.saleDate}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Sale Price</p>
+                                <p className="text-sm font-bold text-green-600">{item.salePrice} ETH</p>
+                              </div>
+                              <div className="col-span-2">
+                                <p className="text-xs text-gray-500 mb-1">Buyer</p>
+                                <p className="text-xs font-mono text-gray-700 break-all">{item.buyerAddress}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-20 bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-700">
+                      <div className="text-6xl mb-4">💰</div>
+                      <p className="text-gray-800 text-xl font-semibold mb-2">No items sold yet</p>
+                      <p className="text-gray-600">List your created items to start earning!</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Create Item Tab - Only for owner */}
+              {activeTab === 'create' && isOwner && (
+                <div className="p-6">
+                  <CreateItem
+                    onSuccess={() => {
+                      setActiveTab('seller')
+                      refetchListings()
+                    }}
+                  />
+                </div>
+              )}
+
+              {!isOwner && activeTab !== 'purchased' && (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">Only contract owner can access seller dashboard and create items.</p>
+                </div>
+              )}
+
+              {isOwner && activeTab === 'purchased' && (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">Owner accounts can only access seller dashboard, sold items, and create items.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

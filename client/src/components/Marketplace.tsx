@@ -4,6 +4,7 @@ import { formatEther } from 'viem'
 import { useActiveListings, useBuyItem } from '../hooks/useContracts'
 import { fetchMetadataByTokenId, savePurchase } from '../services/metadataStorage'
 import NotificationModal from './NotificationModal'
+import ItemDetailModal from './ItemDetailModal'
 
 interface GameItem {
   listingId: number
@@ -36,6 +37,7 @@ export default function Marketplace() {
   const { listings, isLoading, refetch: refetchListings } = useActiveListings()
   const { buy, isPending: isBuying, isSuccess: isBuySuccess, error: buyError, hash: buyHash } = useBuyItem()
   const [buyingListingId, setBuyingListingId] = useState<number | null>(null)
+  const [selectedItem, setSelectedItem] = useState<GameItem | null>(null)
 
   // Notification modal state
   const [notification, setNotification] = useState<{
@@ -210,6 +212,9 @@ export default function Marketplace() {
               type: 'success',
             })
 
+            // Close modal
+            setSelectedItem(null)
+
             // Refetch listings to update UI
             refetchListings()
           }
@@ -249,226 +254,218 @@ export default function Marketplace() {
   }, [buyError])
 
   return (
-    <div className="min-h-screen bg-white py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div
+      className="relative min-h-screen bg-cover bg-center py-12"
+      style={{ backgroundImage: "url('/image3.gif')" }}
+    >
+      {/* Lớp phủ đen mờ */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div>
-                <h1 className="text-5xl font-extrabold text-black mb-2">
-                  Marketplace
-                </h1>
-                <p className="text-gray-600 text-lg">Discover and collect unique game items</p>
+          <div className="mb-4 text-center bg-white rounded-2xl p-6">
+            <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600 mb-4 inline-block">
+              Marketplace
+            </h1>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover and collect unique game items from the community</p>
+            {isLoading && (
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium text-gray-700">Loading items...</span>
               </div>
-              {isLoading && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md">
-                  <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm font-medium text-gray-700">Loading items...</span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Filters */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Search */}
-              <div className="lg:col-span-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  🔍 Search
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search items..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
-                  />
-                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+          {/* Main Content Container */}
+          <div className="bg-white rounded-3xl p-8 shadow-2xl">
+            {/* Filters */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Search */}
+                <div className="lg:col-span-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    🔍 Search
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search items..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
 
-              {/* Category Filter */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  📦 Category
-                </label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Rarity Filter */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  ⭐ Rarity
-                </label>
-                <select
-                  value={selectedRarity}
-                  onChange={(e) => setSelectedRarity(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
-                >
-                  {rarities.map(rarity => (
-                    <option key={rarity} value={rarity}>
-                      {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Sort */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  🔄 Sort By
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
-                >
-                  <option value="timestamp-desc">Default</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="name">Name: A to Z</option>
-                  <option value="name-desc">Name: Z to A</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Notification Modal */}
-          <NotificationModal
-            isOpen={notification.isOpen}
-            onClose={() => {
-              setNotification({ ...notification, isOpen: false })
-              if (notification.type === 'error') {
-                refetchListings()
-              }
-            }}
-            title={notification.title}
-            message={notification.message}
-            type={notification.type}
-          />
-
-          {/* Items Grid */}
-          {isLoading ? (
-            <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
-              <p className="text-gray-600 text-lg font-medium">Loading marketplace items...</p>
-            </div>
-          ) : filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredItems.map(item => {
-                const isMyItem = address && item.seller.toLowerCase() === address.toLowerCase()
-                return (
-                  <div
-                    key={item.listingId}
-                    className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                {/* Category Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📦 Category
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
                   >
-                    {/* Image Section with Gradient Overlay */}
-                    <div className="relative bg-gray-50 p-6">
-                      <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
-                        {item.image.startsWith('http') ? (
-                          <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
-                        ) : (
-                          <span className="drop-shadow-lg">{item.image}</span>
-                        )}
-                      </div>
-                      {/* Rarity Badge */}
-                      <div className="absolute top-4 right-4">
-                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${rarityColors[item.rarity]}`}>
-                          {item.rarity.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                    {/* Content Section */}
-                    <div className="p-6 flex flex-col h-full">
-                      <div className="mb-3">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
-                          {item.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem]">{item.description}</p>
+                {/* Rarity Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ⭐ Rarity
+                  </label>
+                  <select
+                    value={selectedRarity}
+                    onChange={(e) => setSelectedRarity(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  >
+                    {rarities.map(rarity => (
+                      <option key={rarity} value={rarity}>
+                        {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    🔄 Sort By
+                  </label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  >
+                    <option value="timestamp-desc">Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="name">Name: A to Z</option>
+                    <option value="name-desc">Name: Z to A</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Notification Modal */}
+            <NotificationModal
+              isOpen={notification.isOpen}
+              onClose={() => {
+                setNotification({ ...notification, isOpen: false })
+                if (notification.type === 'error') {
+                  refetchListings()
+                }
+              }}
+              title={notification.title}
+              message={notification.message}
+              type={notification.type}
+            />
+
+            {/* Item Detail Modal */}
+            <ItemDetailModal
+              isOpen={!!selectedItem}
+              onClose={() => setSelectedItem(null)}
+              item={selectedItem}
+              onBuy={handleBuy}
+              isBuying={isBuying}
+              address={address}
+              isMyItem={selectedItem ? address?.toLowerCase() === selectedItem.seller.toLowerCase() : false}
+            />
+
+            {/* Items Grid */}
+            {isLoading ? (
+              <div className="text-center py-20">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#E7F5DC] border-t-transparent mb-4"></div>
+                <p className="text-gray-600 text-lg font-medium">Loading marketplace items...</p>
+              </div>
+            ) : filteredItems.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredItems.map(item => {
+                  return (
+                    <div
+                      key={item.listingId}
+                      onClick={() => setSelectedItem(item)}
+                      className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-[#E7F5DC] overflow-hidden flex flex-col cursor-pointer transform hover:-translate-y-1"
+                    >
+                      {/* Image Section */}
+                      <div className="relative w-full h-48 bg-gray-50 flex items-center justify-center border-b-2 border-[#E7F5DC]">
+                        <div className="text-5xl transform group-hover:scale-110 transition-transform duration-300">
+                          {item.image.startsWith('http') ? (
+                            <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-md" />
+                          ) : (
+                            <span className="drop-shadow-md">{item.image}</span>
+                          )}
+                        </div>
+                        {/* Rarity Badge */}
+                        <div className="absolute top-2 right-2">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold shadow-sm ${rarityColors[item.rarity]}`}>
+                            {item.rarity.toUpperCase()}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-                        <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                          <span className="text-green-500">📦</span>
-                          {item.category}
-                        </span>
-                      </div>
+                      {/* Content Section */}
+                      <div className="p-4 flex-grow flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors line-clamp-1">
+                              {item.name}
+                            </h3>
+                          </div>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-lg mb-2">
+                            <span className="text-green-500">📦</span>
+                            {item.category}
+                          </span>
+                        </div>
 
-                      {/* Price and Seller Section */}
-                      <div className="pt-4">
-                        <div className="mb-4">
-                          <p className="text-xs text-gray-500 mb-1 font-medium">Price</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-extrabold text-green-600">
-                              {item.price}
-                            </p>
-                            <span className="text-sm font-semibold text-gray-600">ETH</span>
+                        <div className="space-y-3 pt-3 border-t border-gray-100">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Price</p>
+                              <p className="text-lg font-bold text-green-600">{item.price} ETH</p>
+                            </div>
+                            <button className="px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-600 hover:text-white transition-colors text-xs font-semibold border border-green-200 group-hover:border-green-600">
+                              View
+                            </button>
                           </div>
                         </div>
-
-                        <div className="mb-4 p-2 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-500 mb-1">Seller</p>
-                          <p className="text-xs font-mono text-gray-700 truncate">
-                            {item.seller.slice(0, 6)}...{item.seller.slice(-4)}
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={() => handleBuy(item)}
-                          disabled={!address || isMyItem || isBuying}
-                          className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:shadow-none"
-                        >
-                          {!address
-                            ? '🔗 Connect Wallet'
-                            : isMyItem
-                              ? '✓ Your Item'
-                              : isBuying
-                                ? '⏳ Processing...'
-                                : '🛒 Buy Now'}
-                        </button>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
-              <div className="text-6xl mb-4">🔍</div>
-              <p className="text-gray-600 text-xl font-semibold mb-2">No items found</p>
-              <p className="text-gray-500">Try adjusting your filters to see more results.</p>
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
+                <div className="text-6xl mb-4">🔍</div>
+                <p className="text-gray-600 text-xl font-semibold mb-2">No items found</p>
+                <p className="text-gray-500">Try adjusting your filters to see more results.</p>
+              </div>
+            )}
 
-          {!isLoading && items.length === 0 && (
-            <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
-              <div className="text-6xl mb-4">🎮</div>
-              <p className="text-gray-600 text-xl font-semibold mb-2">Marketplace is empty</p>
-              <p className="text-gray-500 mb-6">Be the first to create and list an item!</p>
-              <button
-                onClick={() => window.location.href = '/profile'}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                Create Your First Item
-              </button>
-            </div>
-          )}
+            {!isLoading && items.length === 0 && (
+              <div className="text-center py-20 bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-700">
+                <div className="text-6xl mb-4">🎮</div>
+                <p className="text-gray-800 text-xl font-semibold mb-2">Marketplace is empty</p>
+                <p className="text-gray-600 mb-6">Be the first to create and list an item!</p>
+                <button
+                  onClick={() => window.location.href = '/profile'}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  Create Your First Item
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div >

@@ -13,15 +13,15 @@ export default function Navbar() {
       <div className="container max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-3xl font-extrabold text-green-600 hover:scale-105 transition-transform">
+            <Link to="/" className="text-3xl font-extrabold text-green-600 rounded-xl px-4 py-2 hover:scale-105 transition-transform">
               ItsuMart
             </Link>
             <div className="flex space-x-2">
               <Link
                 to="/marketplace"
                 className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${isActive('/marketplace')
-                  ? 'bg-green-600 text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-white text-green-600 border-2 border-green-600 shadow-lg'
+                  : 'text-gray-700 border-2 border-white hover:border-green-600'
                   }`}
               >
                 🛒 Marketplace
@@ -30,8 +30,8 @@ export default function Navbar() {
                 <Link
                   to="/profile"
                   className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${isActive('/profile')
-                    ? 'bg-green-600 text-white shadow-lg'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-white text-green-600 border-2 border-green-600 shadow-lg'
+                    : 'text-gray-700 border-2 border-white hover:border-green-600'
                     }`}
                 >
                   👤 Profile
