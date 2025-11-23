@@ -60,7 +60,7 @@ export function useActiveListings() {
     if (listingsData) {
       // listingsData is a tuple: [listingIds, activeListings]
       const [listingIds, activeListings] = listingsData as [bigint[], any[]]
-      
+
       const formattedListings: Listing[] = activeListings.map((listing, index) => ({
         listingId: Number(listingIds[index]),
         seller: listing.seller,
@@ -176,6 +176,25 @@ export function useBuyItem() {
   return { buy, isPending, isConfirming, isSuccess, error, hash, receipt }
 }
 
+// Hook để cancel listing
+export function useCancelListing() {
+  const { writeContract, data: hash, isPending, error } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  const cancel = (listingId: bigint) => {
+    writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MarketplaceABI.abi,
+      functionName: 'cancel',
+      args: [listingId],
+    })
+  }
+
+  return { cancel, isPending, isConfirming, isSuccess, error, hash }
+}
+
 // Hook để check if address is owner of GameItem contract
 export function useIsOwner(userAddress: `0x${string}` | undefined) {
   const { data: owner } = useReadContract({
@@ -185,7 +204,7 @@ export function useIsOwner(userAddress: `0x${string}` | undefined) {
     query: { enabled: !!userAddress },
   })
 
-  const isOwner = userAddress && owner 
+  const isOwner = userAddress && owner
     ? userAddress.toLowerCase() === (owner as string).toLowerCase()
     : false
 
