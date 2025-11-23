@@ -68,11 +68,11 @@ export default function Profile() {
   // Track purchased items (items bought by user)
   const [purchasedItems, setPurchasedItems] = useState<PurchasedItem[]>([])
   const [isLoadingPurchases, setIsLoadingPurchases] = useState(false)
-  
+
   // Track created items (items listed by user)
   const [createdItems, setCreatedItems] = useState<CreatedItem[]>([])
   const [sales, setSales] = useState<any[]>([])
-  
+
   // Track sold items (items sold by user)
   const [soldItems, setSoldItems] = useState<SoldItem[]>([])
   const [isLoadingSoldItems, setIsLoadingSoldItems] = useState(false)
@@ -80,17 +80,17 @@ export default function Profile() {
   // Fetch purchased items from DB
   const fetchPurchasedItems = async () => {
     if (!address) return
-    
+
     setIsLoadingPurchases(true)
     try {
       const purchases = await getPurchases(address)
-      
+
       // Fetch metadata for each purchase
       const itemsWithMetadata = await Promise.all(
         purchases.map(async (purchase: any) => {
           try {
             const metadata = await fetchMetadataByTokenId(BigInt(purchase.tokenId))
-            
+
             if (metadata) {
               return {
                 listingId: purchase.listingId,
@@ -134,7 +134,7 @@ export default function Profile() {
   // Fetch sales from DB
   const fetchSales = async () => {
     if (!address || !isOwner) return
-    
+
     try {
       const salesData = await getSales(address)
       setSales(salesData)
@@ -146,17 +146,17 @@ export default function Profile() {
   // Fetch sold items with metadata
   const fetchSoldItems = async () => {
     if (!address || !isOwner) return
-    
+
     setIsLoadingSoldItems(true)
     try {
       const salesData = await getSales(address)
-      
+
       // Fetch metadata for each sold item
       const itemsWithMetadata = await Promise.all(
         salesData.map(async (sale: any) => {
           try {
             const metadata = await fetchMetadataByTokenId(BigInt(sale.tokenId))
-            
+
             if (metadata) {
               return {
                 listingId: sale.listingId,
@@ -213,12 +213,12 @@ export default function Profile() {
       myListings.map(async (listing) => {
         try {
           const metadata = await fetchMetadataByTokenId(listing.tokenId)
-          
+
           // Get sales count for this tokenId
           const tokenSales = sales.filter(s => s.tokenId === listing.tokenId.toString())
           const salesCount = tokenSales.length
           const totalRevenue = tokenSales.reduce((sum, s) => sum + parseFloat(s.price), 0)
-          
+
           if (metadata) {
             return {
               listingId: listing.listingId,
@@ -303,10 +303,10 @@ export default function Profile() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center py-8">
+      <div className="min-h-screen bg-white flex items-center justify-center py-8">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-10 text-center max-w-md">
           <div className="text-6xl mb-6">🔐</div>
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+          <h2 className="text-3xl font-extrabold text-black mb-4">
             Connect Your Wallet
           </h2>
           <p className="text-gray-600 text-lg mb-6">Connect your wallet to view your profile and manage your items.</p>
@@ -321,12 +321,12 @@ export default function Profile() {
   const activeListings = createdItems.filter(item => item.active).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-10">
-            <h1 className="text-5xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-5xl font-extrabold text-black mb-2">
               Profile
             </h1>
             <p className="text-gray-600 text-lg">Manage your items and view your statistics</p>
@@ -338,11 +338,11 @@ export default function Profile() {
               <span>💼</span> Wallet Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <p className="text-sm font-semibold text-gray-600 mb-2">Address</p>
                 <p className="text-base font-mono text-gray-900 break-all bg-white/60 px-3 py-2 rounded-lg">{address}</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
+              <div className="p-4 bg-green-50 rounded-xl border border-green-100">
                 <p className="text-sm font-semibold text-gray-600 mb-2">Balance</p>
                 <p className="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : 'Loading...'}
@@ -350,7 +350,7 @@ export default function Profile() {
               </div>
               {isOwner && (
                 <div className="md:col-span-2">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full shadow-lg">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full shadow-lg">
                     <span className="text-lg">👑</span>
                     <span className="text-sm font-bold">Contract Owner</span>
                   </div>
@@ -366,11 +366,10 @@ export default function Profile() {
                 {!isOwner && (
                   <button
                     onClick={() => setActiveTab('purchased')}
-                    className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${
-                      activeTab === 'purchased'
-                        ? 'border-indigo-600 text-indigo-600 bg-indigo-50'
-                        : 'border-transparent text-gray-500 hover:text-indigo-600 hover:bg-gray-50'
-                    }`}
+                    className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'purchased'
+                      ? 'border-green-600 text-green-600 bg-green-50'
+                      : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                      }`}
                   >
                     🛍️ Purchased Items ({purchasedItems.length})
                   </button>
@@ -379,31 +378,28 @@ export default function Profile() {
                   <>
                     <button
                       onClick={() => setActiveTab('seller')}
-                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${
-                        activeTab === 'seller'
-                          ? 'border-indigo-600 text-indigo-600 bg-indigo-50'
-                          : 'border-transparent text-gray-500 hover:text-indigo-600 hover:bg-gray-50'
-                      }`}
+                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'seller'
+                        ? 'border-green-600 text-green-600 bg-green-50'
+                        : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                        }`}
                     >
                       📊 Dashboard
                     </button>
                     <button
                       onClick={() => setActiveTab('sold')}
-                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${
-                        activeTab === 'sold'
-                          ? 'border-indigo-600 text-indigo-600 bg-indigo-50'
-                          : 'border-transparent text-gray-500 hover:text-indigo-600 hover:bg-gray-50'
-                      }`}
+                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'sold'
+                        ? 'border-green-600 text-green-600 bg-green-50'
+                        : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                        }`}
                     >
                       💰 Sold Items ({soldItems.length})
                     </button>
                     <button
                       onClick={() => setActiveTab('create')}
-                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${
-                        activeTab === 'create'
-                          ? 'border-indigo-600 text-indigo-600 bg-indigo-50'
-                          : 'border-transparent text-gray-500 hover:text-indigo-600 hover:bg-gray-50'
-                      }`}
+                      className={`px-6 py-4 text-sm font-semibold border-b-3 transition-all whitespace-nowrap ${activeTab === 'create'
+                        ? 'border-green-600 text-green-600 bg-green-50'
+                        : 'border-transparent text-gray-500 hover:text-green-600 hover:bg-gray-50'
+                        }`}
                     >
                       ➕ Create Item
                     </button>
@@ -417,7 +413,7 @@ export default function Profile() {
               <div className="p-6">
                 {isLoadingPurchases ? (
                   <div className="text-center py-20">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
                     <p className="text-gray-600 text-lg font-medium">Loading purchased items...</p>
                   </div>
                 ) : purchasedItems.length > 0 ? (
@@ -427,7 +423,7 @@ export default function Profile() {
                         key={`${item.listingId}-${item.tokenId}`}
                         className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
                       >
-                        <div className="relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+                        <div className="relative bg-gray-50 p-6">
                           <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
                             {item.image.startsWith('http') ? (
                               <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
@@ -442,13 +438,13 @@ export default function Profile() {
                           </div>
                         </div>
                         <div className="p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
                             {item.name}
                           </h3>
                           <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem] mb-4">{item.description}</p>
                           <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                             <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                              <span className="text-indigo-500">📦</span>
+                              <span className="text-green-500">📦</span>
                               {item.category}
                             </span>
                           </div>
@@ -458,7 +454,7 @@ export default function Profile() {
                               <p className="text-xs font-medium text-gray-700">{item.purchaseDate}</p>
                             </div>
                             <div className="flex items-baseline gap-2 pl-2">
-                              <p className="text-2xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                              <p className="text-2xl font-extrabold text-green-600">
                                 {item.purchasePrice}
                               </p>
                               <span className="text-sm font-semibold text-gray-600">ETH</span>
@@ -483,12 +479,12 @@ export default function Profile() {
               <div className="p-6">
                 {/* Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-6 border border-indigo-200 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-indigo-700 font-semibold">Active Listings</p>
+                      <p className="text-sm text-gray-700 font-semibold">Active Listings</p>
                       <span className="text-2xl">📋</span>
                     </div>
-                    <p className="text-4xl font-extrabold text-indigo-900">{activeListings}</p>
+                    <p className="text-4xl font-extrabold text-black">{activeListings}</p>
                   </div>
                   <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border border-green-200 shadow-lg hover:shadow-xl transition-shadow">
                     <div className="flex items-center justify-between mb-3">
@@ -497,12 +493,12 @@ export default function Profile() {
                     </div>
                     <p className="text-4xl font-extrabold text-green-900">{totalSales}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-2xl p-6 border border-purple-200 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-purple-700 font-semibold">Total Revenue</p>
+                      <p className="text-sm text-gray-700 font-semibold">Total Revenue</p>
                       <span className="text-2xl">💎</span>
                     </div>
-                    <p className="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <p className="text-4xl font-extrabold text-green-600">
                       {totalRevenue.toFixed(4)} ETH
                     </p>
                   </div>
@@ -514,7 +510,7 @@ export default function Profile() {
                     <h3 className="text-2xl font-bold text-gray-900">Your Created Items</h3>
                     <button
                       onClick={() => setActiveTab('create')}
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                      className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                     >
                       ➕ Create New Item
                     </button>
@@ -530,7 +526,7 @@ export default function Profile() {
                           key={item.listingId}
                           className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
                         >
-                          <div className="relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+                          <div className="relative bg-gray-50 p-6">
                             <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
                               {item.image.startsWith('http') ? (
                                 <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
@@ -545,20 +541,20 @@ export default function Profile() {
                             </div>
                           </div>
                           <div className="p-6">
-                            <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                            <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
                               {item.name}
                             </h4>
                             <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem] mb-4">{item.description}</p>
                             <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                               <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                                <span className="text-indigo-500">📦</span>
+                                <span className="text-green-500">📦</span>
                                 {item.category}
                               </span>
                             </div>
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-600">Price:</span>
-                                <span className="text-lg font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                <span className="text-lg font-extrabold text-green-600">
                                   {item.price} ETH
                                 </span>
                               </div>
@@ -592,7 +588,7 @@ export default function Profile() {
                       <p className="text-gray-500 mb-6">Start creating your first item!</p>
                       <button
                         onClick={() => setActiveTab('create')}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                       >
                         ➕ Create Your First Item
                       </button>
@@ -613,7 +609,7 @@ export default function Profile() {
                 </div>
                 {isLoadingSoldItems ? (
                   <div className="text-center py-20">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
                     <p className="text-gray-600 text-lg font-medium">Loading sold items...</p>
                   </div>
                 ) : soldItems.length > 0 ? (
@@ -644,7 +640,7 @@ export default function Profile() {
                           <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem] mb-4">{item.description}</p>
                           <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                             <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                              <span className="text-indigo-500">📦</span>
+                              <span className="text-green-500">📦</span>
                               {item.category}
                             </span>
                           </div>
@@ -669,7 +665,7 @@ export default function Profile() {
                                 href={`https://localhost:8545/tx/${item.transactionHash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-indigo-600 hover:text-indigo-800 break-all underline"
+                                className="text-xs text-green-600 hover:text-green-800 break-all underline"
                               >
                                 {item.transactionHash.slice(0, 10)}...{item.transactionHash.slice(-8)}
                               </a>
@@ -706,7 +702,7 @@ export default function Profile() {
                 <p className="text-gray-500">Only contract owner can access seller dashboard and create items.</p>
               </div>
             )}
-            
+
             {isOwner && activeTab === 'purchased' && (
               <div className="p-6 text-center">
                 <p className="text-gray-500">Owner accounts can only access seller dashboard, sold items, and create items.</p>

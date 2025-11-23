@@ -57,14 +57,14 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
   const [ipfsUri, setIpfsUri] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  
+
   // Import file state
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importData, setImportData] = useState<ImportItemData[]>([])
   const [importError, setImportError] = useState<string | null>(null)
   const [isProcessingImport, setIsProcessingImport] = useState(false)
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, currentItem: '' })
-  
+
   // Notification modal state
   const [notification, setNotification] = useState<{
     isOpen: boolean
@@ -182,7 +182,7 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
   const handleNotificationClose = () => {
     const wasSuccess = notification.type === 'success'
     setNotification({ ...notification, isOpen: false })
-    
+
     if (wasSuccess) {
       if (isListSuccess && step === 3) {
         // Single item creation success
@@ -286,11 +286,11 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
         try {
           // Mint NFT
           const predictedTokenId = nextTokenId ? BigInt(nextTokenId.toString()) + BigInt(i) : BigInt(i)
-          
+
           // In a real scenario, we'd need to wait for each mint to complete
           // For now, we'll use a simplified approach
           mint(address)
-          
+
           // Wait for mint (in production, wait for transaction receipt)
           await new Promise(resolve => setTimeout(resolve, 3000))
 
@@ -308,7 +308,7 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
 
           // List on marketplace
           list(predictedTokenId, item.price)
-          
+
           // Wait before next item (in production, wait for transaction receipts)
           await new Promise(resolve => setTimeout(resolve, 3000))
         } catch (error: any) {
@@ -343,7 +343,7 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+          <h2 className="text-3xl font-extrabold text-black mb-1">
             Create New Item
           </h2>
           <p className="text-gray-600 text-sm">Mint and list your unique game items</p>
@@ -357,11 +357,10 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
               setImportData([])
               setImportFile(null)
             }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              mode === 'single'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${mode === 'single'
+              ? 'bg-green-600 text-white shadow-lg'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
           >
             ➕ Single Item
           </button>
@@ -371,11 +370,10 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
               setStep(0)
               setUploadError(null)
             }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              mode === 'import'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${mode === 'import'
+              ? 'bg-green-600 text-white shadow-lg'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
           >
             📁 Import File
           </button>
@@ -385,16 +383,16 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
       {/* Import File Mode */}
       {mode === 'import' && (
         <div className="space-y-4">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6 shadow-md">
-            <p className="text-sm text-blue-900 font-semibold mb-3 flex items-center gap-2">
+          <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 mb-6 shadow-md">
+            <p className="text-sm text-black font-semibold mb-3 flex items-center gap-2">
               <span className="text-xl">📋</span>
               Import multiple items from a JSON file
             </p>
-            <p className="text-sm text-blue-800 mb-4">
+            <p className="text-sm text-gray-700 mb-4">
               The file should contain an array of items with the following format:
             </p>
-            <pre className="text-xs bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-blue-200 overflow-x-auto shadow-inner font-mono">
-{`[
+            <pre className="text-xs bg-white/80 backdrop-blur-sm p-4 rounded-xl border-2 border-gray-200 overflow-x-auto shadow-inner font-mono">
+              {`[
   {
     "name": "Sword of Fire",
     "description": "A powerful sword",
@@ -407,10 +405,10 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
 ]`}
             </pre>
             <div className="mt-4 p-3 bg-white/60 rounded-lg">
-              <p className="text-xs text-blue-900 font-semibold mb-1">Required fields:</p>
-              <p className="text-xs text-blue-800">name, description, price, category, rarity</p>
-              <p className="text-xs text-blue-900 font-semibold mt-2 mb-1">Optional:</p>
-              <p className="text-xs text-blue-800">image (defaults to category emoji)</p>
+              <p className="text-xs text-black font-semibold mb-1">Required fields:</p>
+              <p className="text-xs text-gray-700">name, description, price, category, rarity</p>
+              <p className="text-xs text-black font-semibold mt-2 mb-1">Optional:</p>
+              <p className="text-xs text-gray-700">image (defaults to category emoji)</p>
             </div>
           </div>
 
@@ -423,7 +421,7 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
                 type="file"
                 accept=".json"
                 onChange={handleFileSelect}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
                 disabled={isProcessingImport}
               />
             </div>
@@ -462,17 +460,17 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
           )}
 
           {isProcessingImport && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800 font-semibold mb-2">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-black font-semibold mb-2">
                 Processing batch import...
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                 <div
-                  className="bg-indigo-600 h-2.5 rounded-full transition-all"
+                  className="bg-green-600 h-2.5 rounded-full transition-all"
                   style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-gray-600">
                 {importProgress.current} / {importProgress.total} items processed
                 {importProgress.currentItem && ` - Current: ${importProgress.currentItem}`}
               </p>
@@ -494,7 +492,7 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
             <button
               onClick={handleBatchImport}
               disabled={importData.length === 0 || isProcessingImport || !address}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
+              className="bg-green-600 text-white px-8 py-3 rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
             >
               {isProcessingImport ? '⏳ Processing...' : `📥 Import ${importData.length} Item(s)`}
             </button>
@@ -505,193 +503,193 @@ export default function CreateItem({ onSuccess }: { onSuccess?: () => void }) {
       {/* Single Item Mode */}
       {mode === 'single' && (
         <>
-      {/* Step 0: Item Details */}
-      {step === 0 && (
-        <div className="space-y-4">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 mb-6 shadow-md">
-            <p className="text-sm text-blue-900 font-semibold flex items-center gap-2">
-              <span className="text-lg">1️⃣</span>
-              Step 1: Fill in the item details. Metadata will be saved to MongoDB after minting.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">📝 Item Name</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white"
-              placeholder="Enter item name"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">📄 Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              rows={3}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white resize-none"
-              placeholder="Enter item description"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">📦 Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium"
-              >
-                {categoryOptions.map(cat => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">⭐ Rarity</label>
-              <select
-                value={formData.rarity}
-                onChange={(e) => handleInputChange('rarity', e.target.value as CreateItemFormData['rarity'])}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium"
-              >
-                {rarityOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.emoji} {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">💰 Price (ETH)</label>
-            <input
-              type="number"
-              step="0.001"
-              min="0"
-              value={formData.price}
-              onChange={(e) => handleInputChange('price', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white"
-              placeholder="0.1"
-            />
-          </div>
-
-          {uploadError && (
-            <div className="bg-red-100 border border-red-300 rounded-lg p-4">
-              <p className="text-sm text-red-800">❌ {uploadError}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-4 pt-6">
-            <button
-              onClick={handleMint}
-              disabled={!isFormValid || isMinting || !address}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
-            >
-              {isMinting ? '⏳ Minting...' : '🎨 Mint NFT & Continue'}
-            </button>
-          </div>
-
-          {isMinting && (
-            <div className="text-sm text-gray-600">
-              <p>Minting NFT... Transaction: {mintHash?.slice(0, 10)}...</p>
-            </div>
-          )}
-
-          {isUploading && (
-            <div className="text-sm text-gray-600">
-              <p>Saving metadata to MongoDB...</p>
-            </div>
-          )}
-
-          {uploadError && (
-            <div className="bg-red-100 border border-red-300 rounded-lg p-4">
-              <p className="text-sm text-red-800">❌ {uploadError}</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Step 2: Approve Marketplace */}
-      {step === 2 && (
-        <div className="space-y-4">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 mb-6 shadow-md">
-            <p className="text-sm text-blue-900 font-semibold flex items-center gap-2 mb-2">
-              <span className="text-lg">2️⃣</span>
-              Step 2: Approve the marketplace to list your NFT
-            </p>
-            <p className="text-sm text-blue-800 ml-7">
-              This allows the marketplace contract to transfer your NFT when someone buys it.
-            </p>
-            {ipfsUri && (
-              <div className="mt-3 ml-7 px-3 py-2 bg-green-100 border border-green-300 rounded-lg">
-                <p className="text-xs text-green-800 font-semibold">✅ Metadata saved successfully!</p>
+          {/* Step 0: Item Details */}
+          {step === 0 && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-5 mb-6 shadow-md">
+                <p className="text-sm text-black font-semibold flex items-center gap-2">
+                  <span className="text-lg">1️⃣</span>
+                  Step 1: Fill in the item details. Metadata will be saved to MongoDB after minting.
+                </p>
               </div>
-            )}
-          </div>
 
-          <div className="flex justify-end space-x-4 pt-6">
-            <button
-              onClick={handleApprove}
-              disabled={isApproving}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
-            >
-              {isApproving ? '⏳ Approving...' : '✅ Approve Marketplace'}
-            </button>
-          </div>
-        </div>
-      )}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">📝 Item Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+                  placeholder="Enter item name"
+                />
+              </div>
 
-      {/* Step 3: List on Marketplace */}
-      {step === 3 && (
-        <div className="space-y-4">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-5 mb-6 shadow-md">
-            <p className="text-sm text-green-900 font-semibold flex items-center gap-2">
-              <span className="text-lg">3️⃣</span>
-              Step 3: List your item on the marketplace for <span className="text-lg font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{formData.price} ETH</span>
-            </p>
-          </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">📄 Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white resize-none"
+                  placeholder="Enter item description"
+                />
+              </div>
 
-          <div className="bg-gradient-to-br from-gray-50 to-indigo-50 rounded-2xl p-6 border-2 border-gray-200 mb-6 shadow-lg">
-            <div className="text-7xl text-center mb-4">{formData.image}</div>
-            <h3 className="text-2xl font-bold text-gray-900 text-center mb-2">{formData.name}</h3>
-            <p className="text-sm text-gray-600 text-center mb-4">{formData.description}</p>
-            <div className="mt-4 text-center p-4 bg-white/60 rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">Listing Price</p>
-              <span className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{formData.price} ETH</span>
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">📦 Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  >
+                    {categoryOptions.map(cat => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div className="flex justify-end space-x-4 pt-6">
-            <button
-              onClick={() => setStep(2)}
-              className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold"
-            >
-              ← Back
-            </button>
-            <button
-              onClick={handleList}
-              disabled={isListing}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
-            >
-              {isListing ? '⏳ Listing...' : '🚀 List on Marketplace'}
-            </button>
-          </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">⭐ Rarity</label>
+                  <select
+                    value={formData.rarity}
+                    onChange={(e) => handleInputChange('rarity', e.target.value as CreateItemFormData['rarity'])}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  >
+                    {rarityOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.emoji} {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          {isListing && (
-            <div className="text-sm text-gray-600">
-              <p>Listing item... Transaction: {listHash?.slice(0, 10)}...</p>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">💰 Price (ETH)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+                  placeholder="0.1"
+                />
+              </div>
+
+              {uploadError && (
+                <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+                  <p className="text-sm text-red-800">❌ {uploadError}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4 pt-6">
+                <button
+                  onClick={handleMint}
+                  disabled={!isFormValid || isMinting || !address}
+                  className="bg-green-600 text-white px-8 py-3 rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
+                >
+                  {isMinting ? '⏳ Minting...' : '🎨 Mint NFT & Continue'}
+                </button>
+              </div>
+
+              {isMinting && (
+                <div className="text-sm text-gray-600">
+                  <p>Minting NFT... Transaction: {mintHash?.slice(0, 10)}...</p>
+                </div>
+              )}
+
+              {isUploading && (
+                <div className="text-sm text-gray-600">
+                  <p>Saving metadata to MongoDB...</p>
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+                  <p className="text-sm text-red-800">❌ {uploadError}</p>
+                </div>
+              )}
             </div>
           )}
 
-        </div>
-      )}
+          {/* Step 2: Approve Marketplace */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-5 mb-6 shadow-md">
+                <p className="text-sm text-black font-semibold flex items-center gap-2 mb-2">
+                  <span className="text-lg">2️⃣</span>
+                  Step 2: Approve the marketplace to list your NFT
+                </p>
+                <p className="text-sm text-gray-700 ml-7">
+                  This allows the marketplace contract to transfer your NFT when someone buys it.
+                </p>
+                {ipfsUri && (
+                  <div className="mt-3 ml-7 px-3 py-2 bg-green-100 border border-green-300 rounded-lg">
+                    <p className="text-xs text-green-800 font-semibold">✅ Metadata saved successfully!</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-6">
+                <button
+                  onClick={handleApprove}
+                  disabled={isApproving}
+                  className="bg-green-600 text-white px-8 py-3 rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
+                >
+                  {isApproving ? '⏳ Approving...' : '✅ Approve Marketplace'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: List on Marketplace */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-5 mb-6 shadow-md">
+                <p className="text-sm text-green-900 font-semibold flex items-center gap-2">
+                  <span className="text-lg">3️⃣</span>
+                  Step 3: List your item on the marketplace for <span className="text-lg font-extrabold text-green-600">{formData.price} ETH</span>
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-200 mb-6 shadow-lg">
+                <div className="text-7xl text-center mb-4">{formData.image}</div>
+                <h3 className="text-2xl font-bold text-gray-900 text-center mb-2">{formData.name}</h3>
+                <p className="text-sm text-gray-600 text-center mb-4">{formData.description}</p>
+                <div className="mt-4 text-center p-4 bg-white/60 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Listing Price</p>
+                  <span className="text-3xl font-extrabold text-green-600">{formData.price} ETH</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-6">
+                <button
+                  onClick={() => setStep(2)}
+                  className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handleList}
+                  disabled={isListing}
+                  className="bg-green-600 text-white px-8 py-3 rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
+                >
+                  {isListing ? '⏳ Listing...' : '🚀 List on Marketplace'}
+                </button>
+              </div>
+
+              {isListing && (
+                <div className="text-sm text-gray-600">
+                  <p>Listing item... Transaction: {listHash?.slice(0, 10)}...</p>
+                </div>
+              )}
+
+            </div>
+          )}
         </>
       )}
 

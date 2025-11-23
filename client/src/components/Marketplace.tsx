@@ -36,7 +36,7 @@ export default function Marketplace() {
   const { listings, isLoading, refetch: refetchListings } = useActiveListings()
   const { buy, isPending: isBuying, isSuccess: isBuySuccess, error: buyError, hash: buyHash } = useBuyItem()
   const [buyingListingId, setBuyingListingId] = useState<number | null>(null)
-  
+
   // Notification modal state
   const [notification, setNotification] = useState<{
     isOpen: boolean
@@ -59,7 +59,7 @@ export default function Marketplace() {
             try {
               // Try to fetch metadata from IPFS
               const metadata = await fetchMetadataByTokenId(listing.tokenId)
-              
+
               if (metadata) {
                 return {
                   listingId: listing.listingId,
@@ -123,7 +123,7 @@ export default function Marketplace() {
     return items
       .filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             item.description.toLowerCase().includes(searchTerm.toLowerCase())
+          item.description.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
         const matchesRarity = selectedRarity === 'all' || item.rarity === selectedRarity
         return matchesSearch && matchesCategory && matchesRarity
@@ -188,7 +188,7 @@ export default function Marketplace() {
       if (isBuySuccess && buyHash && address && buyingListingId !== null) {
         try {
           const boughtListing = listings?.find(l => l.listingId === buyingListingId)
-          
+
           if (boughtListing) {
             await savePurchase({
               buyerAddress: address,
@@ -198,10 +198,10 @@ export default function Marketplace() {
               price: formatEther(boughtListing.price),
               transactionHash: buyHash,
             })
-            
+
             // Reset buying state
             setBuyingListingId(null)
-            
+
             // Show success notification
             setNotification({
               isOpen: true,
@@ -209,7 +209,7 @@ export default function Marketplace() {
               message: 'The item has been added to your collection. You can view it in your Profile.',
               type: 'success',
             })
-            
+
             // Refetch listings to update UI
             refetchListings()
           }
@@ -234,11 +234,11 @@ export default function Marketplace() {
       const errorMessage = buyError.message?.includes('not active')
         ? 'This item is no longer available for purchase.'
         : buyError.message?.includes('wrong price')
-        ? 'Price mismatch. Please refresh and try again.'
-        : buyError.message?.includes('revert')
-        ? 'Transaction failed. The item may no longer be available or you may not have sufficient balance.'
-        : buyError.message || 'Unknown error occurred.'
-      
+          ? 'Price mismatch. Please refresh and try again.'
+          : buyError.message?.includes('revert')
+            ? 'Transaction failed. The item may no longer be available or you may not have sufficient balance.'
+            : buyError.message || 'Unknown error occurred.'
+
       setNotification({
         isOpen: true,
         title: 'Purchase Failed',
@@ -249,21 +249,21 @@ export default function Marketplace() {
   }, [buyError])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
-                <h1 className="text-5xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                <h1 className="text-5xl font-extrabold text-black mb-2">
                   Marketplace
                 </h1>
                 <p className="text-gray-600 text-lg">Discover and collect unique game items</p>
               </div>
               {isLoading && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md">
-                  <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-sm font-medium text-gray-700">Loading items...</span>
                 </div>
               )}
@@ -284,7 +284,7 @@ export default function Marketplace() {
                     placeholder="Search items..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white"
+                    className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
                   />
                   <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -300,7 +300,7 @@ export default function Marketplace() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>
@@ -318,7 +318,7 @@ export default function Marketplace() {
                 <select
                   value={selectedRarity}
                   onChange={(e) => setSelectedRarity(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
                 >
                   {rarities.map(rarity => (
                     <option key={rarity} value={rarity}>
@@ -336,7 +336,7 @@ export default function Marketplace() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white font-medium"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white font-medium"
                 >
                   <option value="timestamp-desc">Default</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -365,7 +365,7 @@ export default function Marketplace() {
           {/* Items Grid */}
           {isLoading ? (
             <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
               <p className="text-gray-600 text-lg font-medium">Loading marketplace items...</p>
             </div>
           ) : filteredItems.length > 0 ? (
@@ -378,7 +378,7 @@ export default function Marketplace() {
                     className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
                   >
                     {/* Image Section with Gradient Overlay */}
-                    <div className="relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+                    <div className="relative bg-gray-50 p-6">
                       <div className="text-7xl text-center h-32 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
                         {item.image.startsWith('http') ? (
                           <img src={item.image} alt={item.name} className="w-32 h-32 object-contain drop-shadow-lg" />
@@ -397,15 +397,15 @@ export default function Marketplace() {
                     {/* Content Section */}
                     <div className="p-6 flex flex-col h-full">
                       <div className="mb-3">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
                           {item.name}
                         </h3>
                         <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem]">{item.description}</p>
                       </div>
-                      
+
                       <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                         <span className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                          <span className="text-indigo-500">📦</span>
+                          <span className="text-green-500">📦</span>
                           {item.category}
                         </span>
                       </div>
@@ -415,13 +415,13 @@ export default function Marketplace() {
                         <div className="mb-4">
                           <p className="text-xs text-gray-500 mb-1 font-medium">Price</p>
                           <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            <p className="text-3xl font-extrabold text-green-600">
                               {item.price}
                             </p>
                             <span className="text-sm font-semibold text-gray-600">ETH</span>
                           </div>
                         </div>
-                        
+
                         <div className="mb-4 p-2 bg-gray-50 rounded-lg">
                           <p className="text-xs text-gray-500 mb-1">Seller</p>
                           <p className="text-xs font-mono text-gray-700 truncate">
@@ -432,15 +432,15 @@ export default function Marketplace() {
                         <button
                           onClick={() => handleBuy(item)}
                           disabled={!address || isMyItem || isBuying}
-                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:shadow-none"
+                          className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:shadow-none"
                         >
                           {!address
                             ? '🔗 Connect Wallet'
                             : isMyItem
-                            ? '✓ Your Item'
-                            : isBuying
-                            ? '⏳ Processing...'
-                            : '🛒 Buy Now'}
+                              ? '✓ Your Item'
+                              : isBuying
+                                ? '⏳ Processing...'
+                                : '🛒 Buy Now'}
                         </button>
                       </div>
                     </div>
@@ -463,7 +463,7 @@ export default function Marketplace() {
               <p className="text-gray-500 mb-6">Be the first to create and list an item!</p>
               <button
                 onClick={() => window.location.href = '/profile'}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 Create Your First Item
               </button>
@@ -471,6 +471,6 @@ export default function Marketplace() {
           )}
         </div>
       </div>
-    </div>
+    </div >
   )
 }

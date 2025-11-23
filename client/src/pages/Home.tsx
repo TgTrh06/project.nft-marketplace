@@ -5,12 +5,12 @@ export default function Home() {
   const { isConnected } = useAccount()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-6xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">
-            <h1 className="text-7xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+            <h1 className="text-7xl font-extrabold text-green-600 mb-6">
               🎮 ItsuMart
             </h1>
             <p className="text-3xl text-gray-700 font-semibold mb-4">
@@ -40,13 +40,13 @@ export default function Home() {
               className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-10 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
             >
               <div className="text-7xl mb-6 transform group-hover:scale-110 transition-transform">🛒</div>
-              <h2 className="text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
+              <h2 className="text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
                 Marketplace
               </h2>
               <p className="text-gray-600 text-lg">
                 Browse and purchase unique game items from other players
               </p>
-              <div className="mt-6 text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
+              <div className="mt-6 text-green-600 font-semibold group-hover:translate-x-2 transition-transform">
                 Explore Marketplace →
               </div>
             </Link>
@@ -57,13 +57,13 @@ export default function Home() {
                 className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-10 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
               >
                 <div className="text-7xl mb-6 transform group-hover:scale-110 transition-transform">👤</div>
-                <h2 className="text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
+                <h2 className="text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
                   Profile
                 </h2>
                 <p className="text-gray-600 text-lg">
                   View your purchased items, manage your collection, and access seller dashboard
                 </p>
-                <div className="mt-6 text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform">
+                <div className="mt-6 text-green-600 font-semibold group-hover:translate-x-2 transition-transform">
                   View Profile →
                 </div>
               </Link>
@@ -72,11 +72,11 @@ export default function Home() {
 
           {/* Features */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-10">
-            <h2 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center mb-10">
+            <h2 className="text-4xl font-extrabold text-black text-center mb-10">
               Features
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 hover:shadow-lg transition-shadow">
+              <div className="text-center p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow">
                 <div className="text-5xl mb-4">🔗</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Decentralized</h3>
                 <p className="text-gray-600">
@@ -90,7 +90,7 @@ export default function Home() {
                   Buy and sell game items with other players in a secure marketplace
                 </p>
               </div>
-              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-lg transition-shadow">
+              <div className="text-center p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow">
                 <div className="text-5xl mb-4">📊</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Analytics</h3>
                 <p className="text-gray-600">
